@@ -123,71 +123,109 @@ def test6():
         writer = tf.summary.FileWriter("/home/jerrall/tensorflow_study/tensorboard", tf.get_default_graph())
         writer.close()
 
-def test_7():
-    #假设loss函数 y=x^2, 选择初始点   x_0=5
-    Training_step=100
-    #Learning_rate=0.01
-    global_step = tf.Variable(0)#计数器，每训练一个batch就+1
-    Learning_rate=tf.train.exponential_decay(0.1,global_step,1,0.96,staircase=True)
-    x=tf.Variable(tf.constant(5,dtype=tf.float32),name='x_0')
-    y=tf.square(x)
 
-    train_op=tf.train.GradientDescentOptimizer(Learning_rate).minimize(y,global_step=global_step)
+def test_7():
+    # 假设loss函数 y=x^2, 选择初始点   x_0=5
+    Training_step = 100
+    # Learning_rate=0.01
+    global_step = tf.Variable(0)  # 计数器，每训练一个batch就+1
+    Learning_rate = tf.train.exponential_decay(0.1, global_step, 1, 0.96, staircase=True)
+    x = tf.Variable(tf.constant(5, dtype=tf.float32), name='x_0')
+    y = tf.square(x)
+
+    train_op = tf.train.GradientDescentOptimizer(Learning_rate).minimize(y, global_step=global_step)
 
     with tf.Session() as  sess:
         sess.run(tf.global_variables_initializer())
         for i in range(Training_step):
             sess.run(train_op)
-            x_value=sess.run(x)
-            print ("After %s iteration(s): x%s is %f."% (i+1, i+1, x_value) )
+            x_value = sess.run(x)
+            print("After %s iteration(s): x%s is %f." % (i + 1, i + 1, x_value))
 
-def get_weight(shape,lambda_):
-    #获取－层神经网络边上的权茧，并将这个权重的L2正则化损失加入名称为’ losses ’的集合中
 
-    var=tf.Variable(tf.random.normal(shape),dtype=tf.float32)
+def get_weight(shape, lambda_):
+    # 获取－层神经网络边上的权茧，并将这个权重的L2正则化损失加入名称为’ losses ’的集合中
+
+    var = tf.Variable(tf.random.normal(shape), dtype=tf.float32)
 
     # add to collection 函数将这个新生成变量的L2 正则化损失项加入集合。
-    #这个函数的第一个参数’ losses ’ 是集合的名字，第二个参数是要加入这个集合的内容。
-    tf.add_to_collection("losses" ,tf.contrib.layers.l2_regularizer(lambda_)(var))
+    # 这个函数的第一个参数’ losses ’ 是集合的名字，第二个参数是要加入这个集合的内容。
+    tf.add_to_collection("losses", tf.contrib.layers.l2_regularizer(lambda_)(var))
     return var
 
 
 def test_8():
-    x=tf.placeholder(tf.float32,shape=(None,2))
-    y=tf.placeholder(tf.float32,shape=(None,2))
+    x = tf.placeholder(tf.float32, shape=(None, 2))
+    y = tf.placeholder(tf.float32, shape=(None, 2))
 
-    batch_size=8
+    batch_size = 8
     # 定义了每一层的节点数
-    layer_dimension=[2,10,10,10,1]
-    #神经网络的层数
-    n_layers=len(layer_dimension)
-    #这个变量维护前向传播时最深层的节点，开始的时候就是输入层。
-    cur_layer=x
-    #当前层的节点个数。
-    in_dimension=layer_dimension[0]
-    #通过一个循环来生成5层全连接的冲经网络结构。
-    for i in range(1,n_layers):
-        out_dimension=layer_dimension[i]
-        #某一层的参数
-        weight=get_weight([in_dimension,out_dimension])
-        bias=tf.Variable(tf.constant(0.1,shape=[out_dimension]))
-        #RELU激活函数
-        cur_layer=tf.nn.relu(tf.matmul(cur_layer,weight)+bias)
-        #更新下一层的节点个数
-        in_dimension=layer_dimension[i]
+    layer_dimension = [2, 10, 10, 10, 1]
+    # 神经网络的层数
+    n_layers = len(layer_dimension)
+    # 这个变量维护前向传播时最深层的节点，开始的时候就是输入层。
+    cur_layer = x
+    # 当前层的节点个数。
+    in_dimension = layer_dimension[0]
+    # 通过一个循环来生成5层全连接的冲经网络结构。
+    for i in range(1, n_layers):
+        out_dimension = layer_dimension[i]
+        # 某一层的参数
+        weight = get_weight([in_dimension, out_dimension])
+        bias = tf.Variable(tf.constant(0.1, shape=[out_dimension]))
+        # RELU激活函数
+        cur_layer = tf.nn.relu(tf.matmul(cur_layer, weight) + bias)
+        # 更新下一层的节点个数
+        in_dimension = layer_dimension[i]
 
-    #在定义神经网络前向传播的同时已经将所有的L2正则化损失加入了图上的集合，
-    #这里只需要计算刻画模型在训练数据上表现的损失函数。
-    #此时cur_layer已经是最后一层
-    mse_loss=tf.reduce_mean(tf.square(y_-cur_layer))
+    # 在定义神经网络前向传播的同时已经将所有的L2正则化损失加入了图上的集合，
+    # 这里只需要计算刻画模型在训练数据上表现的损失函数。
+    # 此时cur_layer已经是最后一层
+    mse_loss = tf.reduce_mean(tf.square(y_ - cur_layer))
 
-    #将均方误差损失函数加入损失集合。
-    tf.add_to_collection('losses' ,mes_loss)
+    # 将均方误差损失函数加入损失集合。
+    tf.add_to_collection('losses', mse_loss)
 
     # get_collection返回一个列表，这个列表是所有这个集合中的元素。在这个样例中
-    #这些元素就是损失函数的不同部分，将它们加起来就可以得到最终的损失函数。
+    # 这些元素就是损失函数的不同部分，将它们加起来就可以得到最终的损失函数。
 
-    loss=tf.add_n(tf.get_collection('losses'))
+    loss = tf.add_n(tf.get_collection('losses'))
+
+
+def test_9():
+    # 定义变量及滑动平均类
+
+    # 定义一个变盐用于计算滑动平均，这个变量的初始值为0。
+    # 注意这里手动指定了变盘的类型为tf.float32 ，因为所有需要计算滑动平均的变量必须是实数型。
+    v1 = tf.Variable(0, dtype=tf.float32)
+    # 这里 step 变量模拟神经网络中迭代的轮数，可以用于动态控制衰减率。
+    step = tf.Variable(0, trainable=False)
+    # 定义了一个滑动平均的类，给定了衰减率0.99，和控制衰减率的变量step
+    ema = tf.train.ExponentialMovingAverage(0.99, step)
+    #定义一个更新变量滑动的操作
+    maintain_averages_op = ema.apply([v1])
+
+    # 查看不同迭代中变量取值的变化。
+    with tf.Session() as sess:
+        # 初始化
+        init_op = tf.global_variables_initializer()
+        sess.run(init_op)
+        print(sess.run([v1, ema.average(v1)]))
+
+        # 更新变量v1的取值
+        sess.run(tf.assign(v1, 5))
+        sess.run(maintain_averages_op)
+        print(sess.run([v1, ema.average(v1)]))
+
+        # 更新step和v1的取值
+        sess.run(tf.assign(step, 10000))
+        sess.run(tf.assign(v1, 10))
+        sess.run(maintain_averages_op)
+        print(sess.run([v1, ema.average(v1)]))
+
+        # 更新一次v1的滑动平均值
+        sess.run(maintain_averages_op)
+        print(sess.run([v1, ema.average(v1)]))
 
 
 if __name__ == "__main__":
@@ -195,5 +233,5 @@ if __name__ == "__main__":
     # test_2()
     # test_3()
     # test_4()
-    #test6()
+    # test6()
     test_7()
