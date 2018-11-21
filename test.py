@@ -125,14 +125,16 @@ def test6():
 
 
 def test_7():
+    #梯度下降测试，指数衰减学习率
     # 假设loss函数 y=x^2, 选择初始点   x_0=5
     Training_step = 100
     # Learning_rate=0.01
     global_step = tf.Variable(0)  # 计数器，每训练一个batch就+1
+    #指数衰减学习率
     Learning_rate = tf.train.exponential_decay(0.1, global_step, 1, 0.96, staircase=True)
     x = tf.Variable(tf.constant(5, dtype=tf.float32), name='x_0')
     y = tf.square(x)
-
+    #梯度下降
     train_op = tf.train.GradientDescentOptimizer(Learning_rate).minimize(y, global_step=global_step)
 
     with tf.Session() as  sess:
@@ -155,6 +157,7 @@ def get_weight(shape, lambda_):
 
 
 def test_8():
+    #正则化测试
     x = tf.placeholder(tf.float32, shape=(None, 2))
     y = tf.placeholder(tf.float32, shape=(None, 2))
 
@@ -193,16 +196,17 @@ def test_8():
 
 
 def test_9():
-    # 定义变量及滑动平均类
+    # Exponential Moving Average
 
-    # 定义一个变盐用于计算滑动平均，这个变量的初始值为0。
+    # 定义一个变量用于计算滑动平均，这个变量的初始值为0。
     # 注意这里手动指定了变盘的类型为tf.float32 ，因为所有需要计算滑动平均的变量必须是实数型。
     v1 = tf.Variable(0, dtype=tf.float32)
     # 这里 step 变量模拟神经网络中迭代的轮数，可以用于动态控制衰减率。
     step = tf.Variable(0, trainable=False)
     # 定义了一个滑动平均的类，给定了衰减率0.99，和控制衰减率的变量step
     ema = tf.train.ExponentialMovingAverage(0.99, step)
-    #定义一个更新变量滑动的操作
+    #定义一个更新变量滑动的操作，这里需要给定一个列表，每次执行这个操作，
+    #列表中的变量都会更新
     maintain_averages_op = ema.apply([v1])
 
     # 查看不同迭代中变量取值的变化。
@@ -210,22 +214,30 @@ def test_9():
         # 初始化
         init_op = tf.global_variables_initializer()
         sess.run(init_op)
+        '此时step是0，根据ema动态设置参数'
+        '衰减率为：min(decay, (1 + num_updates) / (10 + num_updates)) = min(0.99,0.1 )=0.1'
         print(sess.run([v1, ema.average(v1)]))
+        'V1=0 ，v1_shadow=0*0.1+0.9*0=0'
+
 
         # 更新变量v1的取值
         sess.run(tf.assign(v1, 5))
         sess.run(maintain_averages_op)
         print(sess.run([v1, ema.average(v1)]))
+        'V1=5 ，v1_shadow=0*0.1+0.9*5=4.5'
 
         # 更新step和v1的取值
         sess.run(tf.assign(step, 10000))
+        '此时step=10000，衰减率=min(0.99,10001/10010)=0.99'
         sess.run(tf.assign(v1, 10))
         sess.run(maintain_averages_op)
         print(sess.run([v1, ema.average(v1)]))
+        'V1=10 ，v1_shadow=4.5*0.99+0.01*10=4.555'
 
         # 更新一次v1的滑动平均值
         sess.run(maintain_averages_op)
         print(sess.run([v1, ema.average(v1)]))
+        'V1=10 ，v1_shadow=4.55*0.99+0.01*10=4.60945'
 
 
 if __name__ == "__main__":
@@ -234,4 +246,4 @@ if __name__ == "__main__":
     # test_3()
     # test_4()
     # test6()
-    test_7()
+    test_9()
