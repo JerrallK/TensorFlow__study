@@ -125,16 +125,16 @@ def test6():
 
 
 def test_7():
-    #梯度下降测试，指数衰减学习率
+    # 梯度下降测试，指数衰减学习率
     # 假设loss函数 y=x^2, 选择初始点   x_0=5
     Training_step = 100
     # Learning_rate=0.01
     global_step = tf.Variable(0)  # 计数器，每训练一个batch就+1
-    #指数衰减学习率
+    # 指数衰减学习率
     Learning_rate = tf.train.exponential_decay(0.1, global_step, 1, 0.96, staircase=True)
     x = tf.Variable(tf.constant(5, dtype=tf.float32), name='x_0')
     y = tf.square(x)
-    #梯度下降
+    # 梯度下降
     train_op = tf.train.GradientDescentOptimizer(Learning_rate).minimize(y, global_step=global_step)
 
     with tf.Session() as  sess:
@@ -157,7 +157,7 @@ def get_weight(shape, lambda_):
 
 
 def test_8():
-    #正则化测试
+    # 正则化测试
     x = tf.placeholder(tf.float32, shape=(None, 2))
     y = tf.placeholder(tf.float32, shape=(None, 2))
 
@@ -170,7 +170,7 @@ def test_8():
     cur_layer = x
     # 当前层的节点个数。
     in_dimension = layer_dimension[0]
-    # 通过一个循环来生成5层全连接的冲经网络结构。
+    # 通过一个循环来生成5层全连接的神经网络结构。
     for i in range(1, n_layers):
         out_dimension = layer_dimension[i]
         # 某一层的参数
@@ -205,8 +205,8 @@ def test_9():
     step = tf.Variable(0, trainable=False)
     # 定义了一个滑动平均的类，给定了衰减率0.99，和控制衰减率的变量step
     ema = tf.train.ExponentialMovingAverage(0.99, step)
-    #定义一个更新变量滑动的操作，这里需要给定一个列表，每次执行这个操作，
-    #列表中的变量都会更新
+    # 定义一个更新变量滑动的操作，这里需要给定一个列表，每次执行这个操作，
+    # 列表中的变量都会更新
     maintain_averages_op = ema.apply([v1])
 
     # 查看不同迭代中变量取值的变化。
@@ -218,7 +218,6 @@ def test_9():
         '衰减率为：min(decay, (1 + num_updates) / (10 + num_updates)) = min(0.99,0.1 )=0.1'
         print(sess.run([v1, ema.average(v1)]))
         'V1=0 ，v1_shadow=0*0.1+0.9*0=0'
-
 
         # 更新变量v1的取值
         sess.run(tf.assign(v1, 5))
