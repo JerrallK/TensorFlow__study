@@ -92,7 +92,7 @@ def inference(input_tensor ,train ,regularizer=None):
         fc2_bias=tf.get_variable(name='bias' ,shape=[NUM_LABELS] ,initializer=tf.constant_initializer(0.1))
         #¼¤»î
         fc2=tf.nn.relu(tf.matmul(fc1,fc2_weight)+fc2_weight)
-        
+
     return fc2
 
 
