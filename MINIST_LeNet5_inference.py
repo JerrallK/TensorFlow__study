@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import tensorflow as tf
 INPUT_NODE=784
 OUTPUT_NODE=10
@@ -12,86 +13,87 @@ CONV1_DEEP=32
 CONV2_SIZE=5
 CONV2_DEEP=64
 
-#È«Á¬½Ó²ã½Úµã¸öÊı
+#å…¨è¿æ¥å±‚èŠ‚ç‚¹ä¸ªæ•°
 FC_SIZE=512
 
-#ÓĞ2¸ö¾í»ı²ã¡¢2¸ö³Ø»¯²ã¡¢2¸öÈ«Á¬½Ó²ã
+#æœ‰2ä¸ªå·ç§¯å±‚ã€2ä¸ªæ± åŒ–å±‚ã€2ä¸ªå…¨è¿æ¥å±‚
 def inference(input_tensor ,train ,regularizer=None):
-    #µÚÒ»²ã£º¾í»ı²ã
-    #ÊäÈë£º28*28*1 £¬Êä³ö28*28*32
+    #ç¬¬ä¸€å±‚ï¼šå·ç§¯å±‚
+    #è¾“å…¥ï¼š28*28*1 ï¼Œè¾“å‡º28*28*32
     with tf.variable_scope('layer1-conv1'):
-        conv1_weight=tf.get_variable(name=='weight' ,shape=[CONV1_SIZE,CONV1_SIZE,NUM_CHANNELS,CONV1_DEEP],
+        conv1_weight=tf.get_variable('weight' ,shape=[CONV1_SIZE,CONV1_SIZE,NUM_CHANNELS,CONV1_DEEP],
                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
-        #Æ«ÖÃÎªÃ¿Ò»¸öchannelÒ»¸ö£¬Í¬Ò»¸öchannelÓÃµÄÊÇÒ»ÑùµÄÆ«ÖÃ
+        #åç½®ä¸ºæ¯ä¸€ä¸ªchannelä¸€ä¸ªï¼ŒåŒä¸€ä¸ªchannelç”¨çš„æ˜¯ä¸€æ ·çš„åç½®
         conv1_bias=tf.get_variable(name='bias' ,shape=[CONV1_DEEP] ,initializer=tf.constant_initializer(0.0))
-        #¾í»ı²Ù×÷
+        #å·ç§¯æ“ä½œ
         conv1=tf.nn.conv2d(input_tensor,conv1_weight,strides=[1,1,1,1],padding="SAME")
-        #¼¤»î
+        #æ¿€æ´»
         relu1=tf.nn.relu(tf.nn.bias_add(conv1,conv1_bias))
 
-    #µÚ¶ş²ã£º³Ø»¯
-    #ÊäÈë£º28*28*32 £¬Êä³ö£º14*14*32
+    #ç¬¬äºŒå±‚ï¼šæ± åŒ–
+    #è¾“å…¥ï¼š28*28*32 ï¼Œè¾“å‡ºï¼š14*14*32
     with tf.variable_scope("layer2-pool1"):
-        #ksize=¹ıÂËÆ÷³ß´ç£¬strides=²½³¤
+        #ksize=è¿‡æ»¤å™¨å°ºå¯¸ï¼Œstrides=æ­¥é•¿
         pool1=tf.nn.max_pool(relu1,ksize=[1,2,2,1],strides=[1,2,2,1],padding="SAME")
 
 
-    #µÚÈı²ã£º¾í»ı²ã
-    #ÊäÈë£º14*14*32 £¬Êä³ö£º14*14*64
+    #ç¬¬ä¸‰å±‚ï¼šå·ç§¯å±‚
+    #è¾“å…¥ï¼š14*14*32 ï¼Œè¾“å‡ºï¼š14*14*64
     with tf.variable_scope('layer3-conv2'):
-        conv2_weight=tf.get_variable(name=='weight' ,shape=[CONV2_SIZE,CONV2_SIZE,NUM_CHANNELS,CONV2_DEEP],
+        conv2_weight=tf.get_variable('weight' ,shape=[CONV2_SIZE,CONV2_SIZE,CONV1_DEEP,CONV2_DEEP],
                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
-        #Æ«ÖÃÎªÃ¿Ò»¸öchannelÒ»¸ö£¬Í¬Ò»¸öchannelÓÃµÄÊÇÒ»ÑùµÄÆ«ÖÃ
+        #åç½®ä¸ºæ¯ä¸€ä¸ªchannelä¸€ä¸ªï¼ŒåŒä¸€ä¸ªchannelç”¨çš„æ˜¯ä¸€æ ·çš„åç½®
         conv2_bias=tf.get_variable(name='bias' ,shape=[CONV2_DEEP] ,initializer=tf.constant_initializer(0.0))
-        #¾í»ı²Ù×÷
+        #å·ç§¯æ“ä½œ
+        #ValueError: Dimensions must be equal, but are 32 and 1 for 'layer3-conv2/Conv2D' (op: 'Conv2D') with input shapes: [100,14,14,32], [5,5,1,64].
         conv2=tf.nn.conv2d(pool1,conv2_weight,strides=[1,1,1,1],padding="SAME")
-        #¼¤»î
+        #æ¿€æ´»
         relu2=tf.nn.relu(tf.nn.bias_add(conv2,conv2_bias))
 
-    #µÚËÄ²ã£º³Ø»¯
-    #ÊäÈë£º14*14*64 £¬Êä³ö£º7*7*64
+    #ç¬¬å››å±‚ï¼šæ± åŒ–
+    #è¾“å…¥ï¼š14*14*64 ï¼Œè¾“å‡ºï¼š7*7*64
     with tf.variable_scope("layer4-pool2"):
-        pool2=tf.nn.max_pool(relu2,ksize=[1,2,2,1] ,strides=[1,2,2,1],padding=['SAME'])
+        pool2=tf.nn.max_pool(relu2,ksize=[1,2,2,1] ,strides=[1,2,2,1],padding='SAME')
 
-    #µÚÎå²ã£ºÈ«Á¬½Ó²ã
-    #ÏÈ½«ÉÏÒ»²ãÊä³öµÄÈıÎ¬¾ØÕó×ª»»ÎªÏòÁ¿£º
-    #Êµ¼ÊÉÏÃ¿Ò»²ãµÄÊäÈëÊä³ö¶¼ÎªÒ»Õû¸öbatchµÄ¾ØÕó£¬Êı¾İ½á¹¹£º[batch£¬length£¬width£¬channel]
+    #ç¬¬äº”å±‚ï¼šå…¨è¿æ¥å±‚
+    #å…ˆå°†ä¸Šä¸€å±‚è¾“å‡ºçš„ä¸‰ç»´çŸ©é˜µè½¬æ¢ä¸ºå‘é‡ï¼š
+    #å®é™…ä¸Šæ¯ä¸€å±‚çš„è¾“å…¥è¾“å‡ºéƒ½ä¸ºä¸€æ•´ä¸ªbatchçš„çŸ©é˜µï¼Œæ•°æ®ç»“æ„ï¼š[batchï¼Œlengthï¼Œwidthï¼Œchannel]
     pool_shape=pool2.get_shape().as_list()
-    #¼ÆËã½Úµã¸öÊı£º7*7*64
+    #è®¡ç®—èŠ‚ç‚¹ä¸ªæ•°ï¼š7*7*64
     nodes=pool_shape[1]*pool_shape[2]*pool_shape[3]
-    #pool_shape[0]ÎªÒ»¸öbatchÖĞÑù±¾¸öÊı£¬Ò»ÏÂ×ª»»ÎªÒ»¸ö¶şÎ¬ÏòÁ¿£¬µÚÒ»¸ö±íÊ¾µÚ¼¸¸öÑù±¾£¬µÚ¶ş¸ö±íÊ¾Ò»¸öÑù±¾µÄÏòÁ¿
+    #pool_shape[0]ä¸ºä¸€ä¸ªbatchä¸­æ ·æœ¬ä¸ªæ•°ï¼Œä¸€ä¸‹è½¬æ¢ä¸ºä¸€ä¸ªäºŒç»´å‘é‡ï¼Œç¬¬ä¸€ä¸ªè¡¨ç¤ºç¬¬å‡ ä¸ªæ ·æœ¬ï¼Œç¬¬äºŒä¸ªè¡¨ç¤ºä¸€ä¸ªæ ·æœ¬çš„å‘é‡
     reshaped=tf.reshape(pool2,[pool_shape[0],nodes])
 
-    #¿ªÊ¼½øĞĞÈ«Á¬½Ó¼ÆËã
+    #å¼€å§‹è¿›è¡Œå…¨è¿æ¥è®¡ç®—
 
     with tf.variable_scope('layer5-fc1'):
         #FC_SiZE=512
-        fc1_weight=tf.get_variable(name='weight' , shape=[nodes,FC_SIZE],
+        fc1_weight=tf.get_variable('weight' , shape=[nodes,FC_SIZE],
                                    initializer=tf.truncated_normal_initializer(stddev=0.1))
-        #ÕıÔò»¯
+        #æ­£åˆ™åŒ–
         if regularizer!=None:
             tf.add_to_collection("losses" ,regularizer(fc1_weight))
 
-        #Æ«ÖÃ
-        fc1_bias=tf.get_variable(name='bias' ,shape=[FC_SIZE],initializer=tf.constant_initializer(0.1))
-        #¼¤»î
+        #åç½®
+        fc1_bias=tf.get_variable('bias' ,shape=[FC_SIZE],initializer=tf.constant_initializer(0.1))
+        #æ¿€æ´»
         fc1=tf.nn.relu(tf.matmul(reshaped,fc1_weight)+fc1_bias)
         #dropout
         if train:
-            #keep_prob=dropÂÊ
+            #keep_prob=dropç‡
             fc1=tf.nn.dropout(x=fc1,keep_prob=0.5)
 
-    #µÚÁù²ã£ºÈ«Á¬½Ó²ã
+    #ç¬¬å…­å±‚ï¼šå…¨è¿æ¥å±‚
     with tf.variable_scope("layer6-fc2"):
-        fc2_weight=tf.get_variable(name='weight' ,shape=[FC_SIZE,NUM_LABELS],
+        fc2_weight=tf.get_variable('weight' ,shape=[FC_SIZE,NUM_LABELS],
                                    initializer=tf.truncated_normal_initializer(stddev=0.1))
-        #ÕıÔò»¯£¬±ÜÃâ¹ıÄâºÏ
+        #æ­£åˆ™åŒ–ï¼Œé¿å…è¿‡æ‹Ÿåˆ
         if regularizer!=None:
             tf.add_to_collection('lossed' ,regularizer(fc2_weight))
 
-        fc2_bias=tf.get_variable(name='bias' ,shape=[NUM_LABELS] ,initializer=tf.constant_initializer(0.1))
-        #¼¤»î
-        fc2=tf.nn.relu(tf.matmul(fc1,fc2_weight)+fc2_weight)
+        fc2_bias=tf.get_variable('bias' ,shape=[NUM_LABELS] ,initializer=tf.constant_initializer(0.1))
+        #æ¿€æ´»
+        fc2=tf.matmul(fc1,fc2_weight)+fc2_bias
 
     return fc2
 
